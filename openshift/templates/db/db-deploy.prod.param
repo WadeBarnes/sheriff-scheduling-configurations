@@ -6,7 +6,9 @@
 # NAME=db
 # APP_NAME=Sheriff-Scheduling
 # ROLE=db
+# NAMESPACE_NAME=01a527
 # APP_GROUP=ss
+# BACKUP_APP_NAME=Backup
 # IMAGE_NAMESPACE=01a527-tools
 # SOURCE_IMAGE_NAME=db
 TAG_NAME=prod
