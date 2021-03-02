@@ -19,7 +19,7 @@ oc -n 01a527-tools process -f ../jenkins-node-generic-template.yaml \
     -p NAME=jenkins-node-zap \
     -p SOURCE_CONTEXT_DIR=jenkins/nodes/zap \
     -p BUILDER_IMAGE_NAME=docker-remote.artifacts.developer.gov.bc.ca/centos:centos7 \
-    | oc create -f -
+    | oc -n 01a527-tools create -f -
 ```
 
 For all params see the list in the `../jenkins-node-generic-template.yaml` or run `oc process --parameters -f ../jenkins-node-generic-template.yaml`.
