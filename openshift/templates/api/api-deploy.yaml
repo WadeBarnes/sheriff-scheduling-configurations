@@ -134,6 +134,8 @@ objects:
       name: ${NAME}${SUFFIX}
       annotations:
         description: Defines how to deploy the component
+        app.openshift.io/connects-to: >-
+          [{"apiVersion":"apps.openshift.io/v1","kind":"DeploymentConfig","name":"${DB_NAME}"}]
       labels:
         name: ${NAME}${SUFFIX}
         app: ${APP_NAME}${SUFFIX}
