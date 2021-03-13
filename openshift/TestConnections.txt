@@ -1,0 +1,11 @@
+# Uses the 'testConnection' script from https://github.com/BCDevOps/openshift-developer-tools
+# Example:
+# echo -e "web\n api\n db\n backup" | xargs -I {} testConnection -n 01a527-dev -f TestConnections.txt -p {}
+
+google.com:80
+dev.oidc.gov.bc.ca:443
+ches-dev.pathfinder.gov.bc.ca:443
+web:8080
+api:8080
+db:5432
+backup:5432

@@ -34,8 +34,8 @@ objects:
         dockerStrategy:
           dockerfilePath: ${DOCKER_FILE_PATH}
           from:
-            kind: "${SOURCE_IMAGE_KIND}"
-            name: "${SOURCE_IMAGE_NAME}:${SOURCE_IMAGE_TAG}"
+            kind: ${SOURCE_IMAGE_KIND}
+            name: ${SOURCE_IMAGE_REGISTRY}${SOURCE_IMAGE_NAME}:${SOURCE_IMAGE_TAG}
       output:
         to:
           kind: ImageStreamTag
@@ -50,7 +50,7 @@ parameters:
     displayName: Suffix
     description: A name suffix used for all objects
     required: false
-    value: ""
+    value: 
   - name: APP_NAME
     displayName: App Name
     description: Used to group components together in the OpenShift console.
@@ -82,11 +82,16 @@ parameters:
     description: The 'kind' (type) of the  source image; typically ImageStreamTag, or DockerImage.
     required: true
     value: DockerImage
+  - name: SOURCE_IMAGE_REGISTRY
+    displayName: Source Image Registry
+    description: The name of the Source Image Registry.
+    required: false
+    value: docker-remote.artifacts.developer.gov.bc.ca/
   - name: SOURCE_IMAGE_NAME
     displayName: Source Image Name
     description: The name of the source image.
     required: true
-    value: docker-remote.artifacts.developer.gov.bc.ca/nginx
+    value: nginx
   - name: SOURCE_IMAGE_TAG
     displayName: Source Image Tag
     description: The tag of the source image.
