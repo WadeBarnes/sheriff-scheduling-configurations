@@ -129,7 +129,7 @@ objects:
               <name>jnlp</name>
               <image>image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/${NAME}</image>
               <privileged>false</privileged>
-              <alwaysPullImage>false</alwaysPullImage>
+              <alwaysPullImage>true</alwaysPullImage>
               <workingDir>/tmp</workingDir>
               <command></command>
               <args>${computer.jnlpmac} ${computer.name}</args>
