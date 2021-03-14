@@ -168,8 +168,9 @@ EOF
     # Copy backup locally ...
     backupFolderName=$(dirname ${fullBackupPath})
     backupFileName=$(basename ${fullBackupPath})
-    echoWarning "\nCopying ${fullBackupPath} locally to ./${backupFileName} ..."
-    oc -n ${sourceNamespace} rsync $(getPodByName ${backupPod}):${fullBackupPath} ./
+    mkdir -p ./tmp
+    echoWarning "\nCopying ${fullBackupPath} locally to ./tmp/${backupFileName} ..."
+    oc -n ${sourceNamespace} rsync $(getPodByName ${backupPod}):${fullBackupPath} ./tmp
 
     echoWarning "\nSwitching context to the destination environment ${destNamespace}/${destCluster} ..."
     export FULLY_QUALIFIED_NAMESPACE=${destNamespace}
@@ -182,7 +183,7 @@ EOF
       ${backupPod} \
       "mkdir -p ${backupFolderName}"
     exitOnError
-    oc -n ${destNamespace} cp ./${backupFileName} $(getPodByName ${backupPod}):${backupFolderName}
+    oc -n ${destNamespace} cp ./tmp/${backupFileName} $(getPodByName ${backupPod}):${backupFolderName}
 
     # Restore the backup in the destination environment ...
     scaleDown -w "${destApiPod}"
@@ -193,8 +194,8 @@ EOF
     scaleUp -w "${destApiPod}"
 
     # Clean up; delete the local copy of the backup ...
-    echoWarning "Clean up, deleting ./${backupFileName} ..."
-    rm -rf ./${backupFileName}
+    echoWarning "Clean up, deleting ./tmp/${backupFileName} ..."
+    rm -rf ./tmp
   )
 }
 # =================================================================================================================
