@@ -15,7 +15,13 @@ usage () {
 
   Commands:
   ========
+    listBuildRefs
+      - Lists build configurations and their git references in a convenient column format.
+      Example:
+        $0 -e tools listBuildRefs
+
     migrateData
+      - For migrating data from one OCP environment to another.
 
 EOF
 }
@@ -198,6 +204,10 @@ _cmd=$(toLower ${1})
 shift
 
 case "${_cmd}" in
+  listbuildrefs)
+    listBuildRefs
+    ;;
+
   migratedata)
 
     backupPod=${1:-backup}
