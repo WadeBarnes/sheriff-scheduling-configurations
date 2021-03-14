@@ -15,9 +15,8 @@ fi
 # ================================================================================================================
 
 if createOperation; then
-  # Generate a random encryption key
-  printStatusMsg "Creating a set of random keys ..."
-  writeParameter "DATA_PROTECTION_ENCRYPTION_KEY" $(generateKey 32 | fold -w 32 | head -n 1) "false"
+  # Get Encryption Key
+  readParameter "DATA_PROTECTION_ENCRYPTION_KEY - Please provide the 32 character encryption key.  The default is a randomly generated 32 character key." DATA_PROTECTION_ENCRYPTION_KEY $(generateKey 32 | fold -w 32 | head -n 1) "false"
 
   # Get Location Services settings
   readParameter "LOCATION_SERVICES_CLIENT_URL - Please provide the endpoint (URL) for the Location Services API." LOCATION_SERVICES_CLIENT_URL "" "false"
@@ -42,10 +41,8 @@ if createOperation; then
   readParameter "SENDER_NAME - Please provide the name to use with the above email address.  The default is a blank string." SENDER_NAME "" "false"
   readParameter "REQUEST_ACCESS_EMAIL - Please provide the email address used for receiving access request emails.  The default is a blank string." REQUEST_ACCESS_EMAIL "" "false"
 else
-  printStatusMsg "Update operation detected ...\nSkipping the generation of keys ...\n"
+  printStatusMsg "Update operation detected ...\nSkipping the prompts for secrets ...\n"
   writeParameter "DATA_PROTECTION_ENCRYPTION_KEY" "generation_skipped" "false"
-
-  printStatusMsg "Update operation detected ...\nSkipping the prompts for LOCATION_SERVICES_CLIENT_URL, LOCATION_SERVICES_CLIENT_USERNAME, LOCATION_SERVICES_CLIENT_PASSWORD, KEYCLOAK_AUTHORITY, KEYCLOAK_SECRET, SITEMINDER_LOGOUT_URL, EMAIL_SERVICE_URL, EMAIL_SERVICE_AUTH_URL, EMAIL_SERVICE_CLIENT_ID, EMAIL_SERVICE_CLIENT_SECRET, SENDER_EMAIL, SENDER_NAME, and REQUEST_ACCESS_EMAIL ...\n"
   writeParameter "LOCATION_SERVICES_CLIENT_URL" "prompt_skipped" "false"
   writeParameter "LOCATION_SERVICES_CLIENT_USERNAME" "prompt_skipped" "false"
   writeParameter "LOCATION_SERVICES_CLIENT_PASSWORD" "prompt_skipped" "false"
