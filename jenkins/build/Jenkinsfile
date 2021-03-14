@@ -18,14 +18,21 @@ pipeline {
     SOURCE_DIRECTORY = 'ScheriffSchedulingSrc'
 
     // SonarQube configuration
-    SONARQUBE_URL_INT = 'http://sonarqube:9000'
+    SONARQUBE_URL_INT = 'https://sonarqube-01a527-tools.apps.silver.devops.gov.bc.ca/'
+    SONARQUBE_TOKEN_SECRET = 'sonarqube-token'
+    SONARQUBE_TOKEN_KEY = 'token'
+
+    // Rocket.Chat Configuration
+    ROCKET_CHAT_SECRET = 'rocket-chat-secrets'
+    ROCKET_CHAT_WEBHOOK_KEY = 'rocket-deploy-webhook'
 
     // The URI to the application being deployed.
     VANITY_URL = sh(script: 'echo "${VANITY_URL:-https://sheriff-scheduling-dev.apps.silver.devops.gov.bc.ca/}"', returnStdout: true).trim()
     OC_JOB_NAME = sh(script: 'echo "${OC_JOB_NAME:-dev}"', returnStdout: true).trim()
     ENABLE_VERSION_PROMPT = sh(script: 'echo "${ENABLE_VERSION_PROMPT:-false}"', returnStdout: true).trim()
     SOURCE_REPO = sh(script: 'echo "${SOURCE_REPO:-https://github.com/bcgov/sheriff-scheduling.git}"', returnStdout: true).trim()
-    SOURCE_REPO_BRANCH = sh(script: 'echo "${SOURCE_REPO_BRANCH:-scaffold}"', returnStdout: true).trim()
+    SOURCE_REPO_BRANCH = sh(script: 'echo "${SOURCE_REPO_BRANCH:-master}"', returnStdout: true).trim()
+    DESTINATION = sh(script: 'echo "${DESTINATION:-dev}"', returnStdout: true).trim()
   }
 
   stages {
@@ -42,11 +49,11 @@ pipeline {
             commonPipeline.abortAllPreviousBuildsInProgress(currentBuild)
           }
 
-          // ensure required secrets and credentials are available in the CI environment
+          // Ensure required secrets and credentials are available in the CI environment
           // [add more secrets here if needed...]
-          sh "oc extract secret/rocket-chat-secrets --to=${env.WORKSPACE} --confirm"
-          env.ROCKET_DEPLOY_WEBHOOK = readFile('rocket-deploy-webhook').trim()
+          env.ROCKET_DEPLOY_WEBHOOK = sh(script: "oc extract --to=- --keys=${ROCKET_CHAT_WEBHOOK_KEY} secret/${ROCKET_CHAT_SECRET} 2>&1 | sed -n 2p", returnStdout: true).trim()
           echo env.ROCKET_DEPLOY_WEBHOOK
+          env.SONAR_TOKEN = sh(script: "oc extract --to=- --keys=${SONARQUBE_TOKEN_KEY} secret/${SONARQUBE_TOKEN_SECRET} 2>&1 | sed -n 2p", returnStdout: true).trim()
 
           // whether runtime build should be skipped
           env.RUNTIME_CHANGES = commonPipeline.hasDirectoryChanged('openshift/templates/web').toString()
