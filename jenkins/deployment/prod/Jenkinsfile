@@ -3,7 +3,7 @@ def PIPELINE_NAME = "deployment/prod"
 
 def LIB_NAME= "ss-lib"
 def LIB_REPO = "https://github.com/bcgov/sheriff-scheduling-configurations.git"
-def LIB_BRANCH = "master"
+def LIB_BRANCH = "feature/ocp4"
 library identifier: "${LIB_NAME}@${LIB_BRANCH}", 
         retriever: modernSCM(
           [$class: 'GitSCMSource',
@@ -21,6 +21,16 @@ node {
             echo "Tagging ${appName}:${config.SOURCE_TAG} for deployment to ${config.DESTINATION_TAG} ..."
             openshift.tag("${appName}:${config.SOURCE_TAG}", "${appName}:${config.DESTINATION_TAG}")
           }
+
+          echo "Watching rollout of ${appName}${config.SUFFIX} in ${config.NAME_SPACE}-${config.DESTINATION_TAG} ..."
+          openshift.withProject("${config.NAME_SPACE}-${config.DESTINATION_TAG}") {
+              def dc = openshift.selector('dc', "${appName}${config.SUFFIX}")
+              // Wait for the deployment to complete.
+              // This will wait until the desired replicas are all available
+              dc.rollout().status()
+          }
+
+          echo "Deployment Complete."
         }
       }
     }
