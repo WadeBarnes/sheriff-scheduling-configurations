@@ -18,7 +18,7 @@ pipeline {
     SOURCE_DIRECTORY = 'ScheriffSchedulingSrc'
 
     // SonarQube configuration
-    SONARQUBE_URL_INT = 'https://sonarqube-01a527-tools.apps.silver.devops.gov.bc.ca/'
+    SONARQUBE_URL_INT = 'http://sonarqube:9000'
     SONARQUBE_TOKEN_SECRET = 'sonarqube-token'
     SONARQUBE_TOKEN_KEY = 'token'
 

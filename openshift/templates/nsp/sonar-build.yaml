@@ -1,0 +1,50 @@
+---
+kind: Template
+apiVersion: v1
+metadata:
+  name: global-nsp-build-template
+objects:
+
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: jenkins-to-sonarqube
+      labels:
+        name: jenkins-to-sonarqube
+    spec:
+      description: |
+        Allow jenkins to talk to SonarQube internally.
+      ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                  name: jenkins
+              namespaceSelector:
+                matchLabels:
+                  name: ${NAMESPACE_NAME}
+                  environment: ${ENV_NAME}
+            - podSelector:
+                matchLabels:
+                  jenkins: slave
+              namespaceSelector:
+                matchLabels:
+                  name: ${NAMESPACE_NAME}
+                  environment: ${ENV_NAME}
+          ports:
+            - protocol: TCP
+              port: 9000
+      podSelector:
+        matchLabels:
+          role: sonarqube
+          app: sonarqube
+
+parameters:
+  - name: NAMESPACE_NAME
+    displayName: The target namespace for the resources.
+    required: true
+    value: 01a527
+  - name: ENV_NAME
+    displayName: Environment Name
+    description: Environment name.  For the build environment this will typically be 'tools'
+    required: true
+    value: tools
