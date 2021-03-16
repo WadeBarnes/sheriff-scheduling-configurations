@@ -23,6 +23,20 @@ usage () {
     migrateData
       - For migrating data from one OCP environment to another.
 
+    scaleUp
+      - Scale up one or more pods.
+        For example;
+          $0 -e dev scaleUp api
+
+    scaleDown
+      - Scale down one or more pods.
+        For example;
+          $0 -e dev scaleDown api
+
+    recycle
+      - Recycle one or more pods.
+        For example;
+          $0 -e dev recycle api
 EOF
 }
 
@@ -235,6 +249,16 @@ case "${_cmd}" in
       "${destNamespace}" \
       "${fullBackupPathNameFilter}" \
       "${rootBackupDir}"
+    ;;
+
+  scaleup)
+    scaleUp -w ${@}
+    ;;
+  scaledown)
+    scaleDown -w ${@}
+    ;;
+  recycle)
+    recyclePods -w ${@}
     ;;
 
   *)
