@@ -17,11 +17,6 @@ pipeline {
     FRONTEND_DIRECTORY = 'web'
     SOURCE_DIRECTORY = 'ScheriffSchedulingSrc'
 
-    // SonarQube configuration
-    SONARQUBE_URL_INT = 'http://sonarqube:9000'
-    SONARQUBE_TOKEN_SECRET = 'sonarqube-token'
-    SONARQUBE_TOKEN_KEY = 'token'
-
     // Rocket.Chat Configuration
     ROCKET_CHAT_SECRET = 'rocket-chat-secrets'
     ROCKET_CHAT_WEBHOOK_KEY = 'rocket-deploy-webhook'
@@ -53,7 +48,6 @@ pipeline {
           // [add more secrets here if needed...]
           env.ROCKET_DEPLOY_WEBHOOK = sh(script: "oc extract --to=- --keys=${ROCKET_CHAT_WEBHOOK_KEY} secret/${ROCKET_CHAT_SECRET} 2>&1 | sed -n 2p", returnStdout: true).trim()
           echo env.ROCKET_DEPLOY_WEBHOOK
-          env.SONAR_TOKEN = sh(script: "oc extract --to=- --keys=${SONARQUBE_TOKEN_KEY} secret/${SONARQUBE_TOKEN_SECRET} 2>&1 | sed -n 2p", returnStdout: true).trim()
 
           // whether runtime build should be skipped
           env.RUNTIME_CHANGES = commonPipeline.hasDirectoryChanged('openshift/templates/web').toString()
@@ -145,97 +139,6 @@ pipeline {
 
           sh "RELEASE_TAG=${RELEASE_VERSION} ./player.sh deploy api ${OC_JOB_NAME} -apply"
           sh "RELEASE_TAG=${RELEASE_VERSION} ./player.sh deploy web ${OC_JOB_NAME} -apply"
-        }
-      }
-    }
-
-    // The ZAP scripts are installed on the root of the jenkins-node-zap image.
-    // When running ZAP from there the reports will be created in /zap/wrk/ by default.
-    // ZAP has problems with creating the reports directly in the Jenkins
-    // working directory, so they have to be copied over after the fact.
-    stage('OWASP Scan') {
-      agent { label 'jenkins-node-zap' }
-      options {
-        timeout(time: 25, unit: 'MINUTES')
-      }
-      steps {
-        retry(3) {
-          script {
-            sh 'mkdir -p zap-output'
-            def return_code = sh returnStatus: true, script: "/zap/zap-baseline.py -x zap-report.xml -r zap-report.html -t $VANITY_URL -d"
-            sh 'cp /zap/wrk/zap-report.* ./zap-output/'
-            echo "Exit value was - $return_code"
-          }
-        }
-      }
-      post {
-        always {
-          publishHTML([
-            allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true,
-            reportDir: '/zap/wrk', reportFiles: 'zap-report.html', reportName: 'OWASP ZAP Scan', reportTitles: 'OWASP ZAP Scan'
-          ])
-          stash name: 'zap', includes: 'zap-output/*'
-        }
-      }
-    }
-
-    stage('Reports') {
-      failFast true
-      options {
-        timeout(time: 15, unit: 'MINUTES')
-      }
-      parallel {
-        stage('Web Reports') {
-          agent { label 'jenkins-node-npm' }
-          steps {
-            script {
-              // pull code
-              checkout([
-                $class: 'GitSCM',
-                branches: [[name: "*/${SOURCE_REPO_BRANCH}"]],
-                doGenerateSubmoduleConfigurations: false,
-                extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: "${SOURCE_DIRECTORY}"]],
-                submoduleCfg: [],
-                userRemoteConfigs: [[url: "${SOURCE_REPO}"]]
-              ])
-              echo 'Preparing the report for the publishing ...'
-              unstash name: 'zap'
-
-              sh """
-                SONAR_URL=${SONARQUBE_URL_INT} ZAP_REPORT=${WORKSPACE}/zap-output/zap-report.xml ./player.sh scan ${OC_JOB_NAME} -apply
-              """
-              echo 'Frontend reports passed'
-            }
-          }
-          post {
-            failure {
-              error '*** Frontend reports failed ***'
-            }
-          }
-        }
-        stage('Backend Reports') {
-          agent { label 'jenkins-node-dotnet' }
-          steps {
-            script {
-              checkout([
-                $class: 'GitSCM',
-                branches: [[name: "*/${SOURCE_REPO_BRANCH}"]],
-                doGenerateSubmoduleConfigurations: false,
-                extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: "${SOURCE_DIRECTORY}"]],
-                submoduleCfg: [],
-                userRemoteConfigs: [[url: "${SOURCE_REPO}"]]
-              ])
-              sh """
-                SONAR_URL=${SONARQUBE_URL_INT} ./player.sh scan-dotnet ${OC_JOB_NAME} -apply
-              """
-              echo 'Backend reports passed'
-            }
-          }
-          post {
-            failure {
-              error '*** Backend reports failed ***'
-            }
-          }
         }
       }
     }
