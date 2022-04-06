@@ -1,3 +1,5 @@
+import com.openshift.jenkins.plugins.OpenShiftDSL;
+
 def RELEASE_VERSION = '1.0'
 
 pipeline {
@@ -28,6 +30,9 @@ pipeline {
     SOURCE_REPO = sh(script: 'echo "${SOURCE_REPO:-https://github.com/bcgov/sheriff-scheduling.git}"', returnStdout: true).trim()
     SOURCE_REPO_BRANCH = sh(script: 'echo "${SOURCE_REPO_BRANCH:-master}"', returnStdout: true).trim()
     DESTINATION = sh(script: 'echo "${DESTINATION:-dev}"', returnStdout: true).trim()
+
+    // Do not deploy schema-spy to PROD
+    SCHEMA_SPY_APP_NAME = "schema-spy"
   }
 
   stages {
@@ -139,6 +144,19 @@ pipeline {
 
           sh "RELEASE_TAG=${RELEASE_VERSION} ./player.sh deploy api ${OC_JOB_NAME} -apply"
           sh "RELEASE_TAG=${RELEASE_VERSION} ./player.sh deploy web ${OC_JOB_NAME} -apply"
+        }
+      }
+    }
+
+    stage("Update ${SCHEMA_SPY_APP_NAME} instance in ${DESTINATION}") {
+      script {
+        openshift.withCluster() {
+          openshift.withProject("${NAMESPACE}-${DESTINATION}") {
+            echo "Recycling ${SCHEMA_SPY_APP_NAME} in ${NAMESPACE}-${DESTINATION} to refresh schema..."
+            def dc = openshift.selector('dc', "${SCHEMA_SPY_APP_NAME}")
+            dc.scale("--replicas=0")
+            dc.scale("--replicas=1")
+          }
         }
       }
     }
