@@ -1,5 +1,3 @@
-import com.openshift.jenkins.plugins.OpenShiftDSL;
-
 def RELEASE_VERSION = '1.0'
 
 pipeline {
@@ -148,15 +146,17 @@ pipeline {
       }
     }
 
-    stage("Update ${SCHEMA_SPY_APP_NAME} instance in ${DESTINATION}") {
-      script {
-        openshift.withCluster() {
-          openshift.withProject("${NAMESPACE}-${DESTINATION}") {
-            echo "Recycling ${SCHEMA_SPY_APP_NAME} in ${NAMESPACE}-${DESTINATION} to refresh schema..."
-            def dc = openshift.selector('dc', "${SCHEMA_SPY_APP_NAME}")
-            dc.scale("--replicas=0")
-            dc.scale("--replicas=1")
-          }
+    stage('Recycle') {
+     when {
+        expression { new Boolean(env.SKIP_BUILD) == false }
+      }
+      options {
+        timeout(time: 10, unit: 'MINUTES')
+      }
+      steps {
+        script {
+          echo "Recycling ${SCHEMA_SPY_APP_NAME} in ${NAMES_PACE}-dev to refresh schema..."
+          sh "./player.sh recycle dev -apply"
         }
       }
     }

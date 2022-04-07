@@ -36,6 +36,9 @@ case "${1:-}" in
     clean)
         echo "Not implemented yet"
         ;;
+    recycle)
+        ./oc-recycle.sh ${ARGV}
+        ;;
     *)
     echo "You are doing it wrong..."
     exit 1
