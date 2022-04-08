@@ -28,6 +28,9 @@ pipeline {
     SOURCE_REPO = sh(script: 'echo "${SOURCE_REPO:-https://github.com/bcgov/sheriff-scheduling.git}"', returnStdout: true).trim()
     SOURCE_REPO_BRANCH = sh(script: 'echo "${SOURCE_REPO_BRANCH:-master}"', returnStdout: true).trim()
     DESTINATION = sh(script: 'echo "${DESTINATION:-dev}"', returnStdout: true).trim()
+
+    // Do not deploy schema-spy to PROD
+    SCHEMA_SPY_APP_NAME = "schema-spy"
   }
 
   stages {
@@ -139,6 +142,21 @@ pipeline {
 
           sh "RELEASE_TAG=${RELEASE_VERSION} ./player.sh deploy api ${OC_JOB_NAME} -apply"
           sh "RELEASE_TAG=${RELEASE_VERSION} ./player.sh deploy web ${OC_JOB_NAME} -apply"
+        }
+      }
+    }
+
+    stage('Recycle') {
+     when {
+        expression { new Boolean(env.SKIP_BUILD) == false }
+      }
+      options {
+        timeout(time: 10, unit: 'MINUTES')
+      }
+      steps {
+        script {
+          echo "Recycling ${SCHEMA_SPY_APP_NAME} in ${NAMES_PACE}-dev to refresh schema..."
+          sh "./player.sh recycle dev -apply"
         }
       }
     }
